@@ -8,12 +8,15 @@ connectDB();
 
 const app = express();
 
-const PORT = process.env.PORT || 5000;
+app.use(express.json());
 
 app.get('/', (req, res) => {
   res.send('Welcome to the Mood Tracker API!');
 });
 
+app.use('/api/auth', require('./routes/auth'));
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
