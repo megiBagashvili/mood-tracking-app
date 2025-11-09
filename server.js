@@ -18,6 +18,8 @@ app.use('/api/auth', require('./routes/auth'));
 
 app.use('/api/users', require('./routes/user'));
 
+pp.use('/api/moods', require('./routes/moods'));
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
