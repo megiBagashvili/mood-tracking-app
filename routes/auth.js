@@ -11,11 +11,11 @@ const createToken = (userId) => {
 router.post(
   '/register',
   asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, username } = req.body;
 
-    if (!email || !password) {
+    if (!email || !password || !username) {
       res.status(400);
-      throw new Error('Please provide email and password');
+      throw new Error('Please provide email and password, and username');
     }
 
     const userExists = await User.findOne({ email });
@@ -28,6 +28,7 @@ router.post(
     const user = await User.create({
       email,
       password,
+      fullName: username,
     });
 
     if (user) {

@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema(
     },
     fullName: {
       type: String,
-      default: '',
+      required: [true, 'Please provide your name'],
     },
     profileImage: {
       type: String,
