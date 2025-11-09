@@ -1,38 +1,30 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
 const { protect } = require('../middleware/authMiddleware');
+const asyncHandler = require('express-async-handler');
 
-router.get('/me', protect, async (req, res) => {
-  if (req.user) {
-    res.status(200).json(req.user);
-  } else {
-    res.status(404).json({ msg: 'User not found' });
-  }
+router.get('/me', protect, (req, res) => {
+  res.status(200).json(req.user);
 });
 
-router.put('/profile', protect, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
+router.put(
+  '/profile',
+  protect,
+  asyncHandler(async (req, res) => {
+    const user = req.user;
 
-    if (user) {
-      user.fullName = req.body.fullName || user.fullName;
-      user.profileImage = req.body.profileImage || user.profileImage;
-      const updatedUser = await user.save();
+    user.fullName = req.body.fullName || user.fullName;
+    user.profileImage = req.body.profileImage || user.profileImage;
 
-      res.status(200).json({
-        id: updatedUser._id,
-        email: updatedUser.email,
-        fullName: updatedUser.fullName,
-        profileImage: updatedUser.profileImage,
-      });
-    } else {
-      res.status(404).json({ msg: 'User not found' });
-    }
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send('Server Error');
-  }
-});
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+      id: updatedUser._id,
+      email: updatedUser.email,
+      fullName: updatedUser.fullName,
+      profileImage: updatedUser.profileImage,
+    });
+  })
+);
 
 module.exports = router;

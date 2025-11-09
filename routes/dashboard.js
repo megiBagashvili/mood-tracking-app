@@ -2,13 +2,16 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const MoodLog = require('../models/MoodLog');
+const asyncHandler = require('express-async-handler');
 
-router.get('/summary', protect, async (req, res) => {
-  try {
+
+router.get(
+  '/summary',
+  protect,
+  asyncHandler(async (req, res) => {
     const userId = req.user.id;
 
     const allLogs = await MoodLog.find({ user: userId }).sort({ date: -1 });
-
     if (allLogs.length === 0) {
       return res.status(200).json({
         averages: { avgMood: 'N/A', avgSleep: 'N/A' },
@@ -23,7 +26,7 @@ router.get('/summary', protect, async (req, res) => {
       notes: latestLog.notes,
       tags: latestLog.tags,
       date: latestLog.date,
-      sleepHours: latestLog.sleepHours
+      sleepHours: latestLog.sleepHours,
     };
 
     const trends = allLogs
@@ -87,10 +90,7 @@ router.get('/summary', protect, async (req, res) => {
       trends,
       latestReflection,
     });
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send('Server Error');
-  }
-});
+  })
+);
 
 module.exports = router;

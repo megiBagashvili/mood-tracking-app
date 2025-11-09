@@ -2,84 +2,73 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const asyncHandler = require('express-async-handler');
 
 const createToken = (userId) => {
-  return jwt.sign(
-    { id: userId },
-    process.env.JWT_SECRET,
-    { expiresIn: '3d' }
-  );
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '3d' });
 };
 
-router.post('/register', async (req, res) => {
-  const { email, password } = req.body;
+router.post(
+  '/register',
+  asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ msg: 'Please enter all fields' });
-  }
-
-  try {
-    let user = await User.findOne({ email });
-    if (user) {
-      return res.status(400).json({ msg: 'User already exists' });
+    if (!email || !password) {
+      res.status(400);
+      throw new Error('Please provide email and password');
     }
 
-    user = new User({
+    const userExists = await User.findOne({ email });
+
+    if (userExists) {
+      res.status(400);
+      throw new Error('User already exists');
+    }
+
+    const user = await User.create({
       email,
       password,
     });
 
-    await user.save();
+    if (user) {
+      const token = createToken(user._id);
 
-    const token = createToken(user._id);
-
-    res.status(201).json({
-      token,
-      user: {
+      res.status(201).json({
         id: user._id,
         email: user.email,
         fullName: user.fullName,
-      },
-    });
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send('Server Error');
-  }
-});
+        profileImage: user.profileImage,
+        token: token,
+      });
+    } else {
+      res.status(400);
+      throw new Error('Invalid user data');
+    }
+  })
+);
 
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+router.post(
+  '/login',
+  asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ msg: 'Please provide email and password' });
-  }
-
-  try {
     const user = await User.findOne({ email });
 
-    if (!user) {
-      return res.status(400).json({ msg: 'Invalid credentials' });
-    }
-    const isMatch = await user.comparePassword(password);
+    if (user && (await user.matchPassword(password))) {
+      const token = createToken(user._id);
 
-    if (!isMatch) {
-      return res.status(400).json({ msg: 'Invalid credentials' });
-    }
-
-    const token = createToken(user._id);
-
-    res.status(200).json({
-      token,
-      user: {
+      res.status(200).json({
         id: user._id,
         email: user.email,
         fullName: user.fullName,
-      },
-    });
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send('Server Error');
-  }
-});
+        profileImage: user.profileImage,
+        token: token,
+      });
+    } else {
+      res.status(401);
+      throw new Error('Invalid email or password');
+    }
+  })
+);
 
 module.exports = router;
