@@ -12,28 +12,28 @@ const app = express();
 app.use(express.json());
 
 const whitelist = [
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://127.0.0.1:5500',
-  process.env.FRONTEND_URL,
+ 'http://localhost:3000',
+ 'http://localhost:5173',
+ 'http://127.0.0.1:5500',
+ 'http://localhost:5500',
+ process.env.FRONTEND_URL,
 ];
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+ origin: function (origin, callback) {
+  if (whitelist.indexOf(origin) !== -1 || !origin) {
+   callback(null, true);
+  } else {
+   console.log(`CORS blocked request from origin: ${origin}`);
+   callback(new Error('Not allowed by CORS'));
+  }
+ },
+ methods: ["GET", "POST", "PUT", "DELETE"],
+ allowedHeaders: ["Content-Type", "Authorization"],
+ credentials: true,
 };
 
-app.use(cors({
-  origin: ["http://127.0.0.1:5500", "http://localhost:5500"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-}));
+app.use(cors(corsOptions));
 
 
 app.get('/', (req, res) => {
